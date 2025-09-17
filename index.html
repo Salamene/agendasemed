@@ -408,7 +408,113 @@
 
     <div id="notification" class="notification"></div>
 
-    <script src="script.js"></script>
+    <script>
+    // Funções JS para consumir a API e atualizar a interface
+    async function fetchTasks() {
+        const container = document.getElementById('tasksContainer');
+        container.innerHTML = '<div class="loading"><i class="fas fa-spinner"></i></div>';
+        try {
+            const res = await fetch('/api/tarefas');
+            const tarefas = await res.json();
+            updateStats(tarefas);
+            if (tarefas.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-inbox"></i>
+                        <h3>Nenhuma tarefa cadastrada</h3>
+                        <p>Adicione uma nova tarefa para começar!</p>
+                    </div>
+                `;
+                return;
+            }
+            container.innerHTML = tarefas.map(tarefa => `
+                <div class="task-card">
+                    <div class="task-header">
+                        <div>
+                            <div class="task-name">${tarefa.nome}</div>
+                            <div class="task-time"><i class="fas fa-clock"></i> ${formatDateTime(tarefa.horario)}</div>
+                        </div>
+                        <button class="delete-btn" onclick="deleteTask(${tarefa.id})">
+                            <i class="fas fa-trash"></i> Remover
+                        </button>
+                    </div>
+                    <div class="task-description">${tarefa.descricao}</div>
+                    <div class="task-footer">
+                        <div class="task-created"><i class="fas fa-calendar-plus"></i> Criada em ${formatDateTime(tarefa.criadoEm)}</div>
+                    </div>
+                </div>
+            `).join('');
+        } catch (err) {
+            container.innerHTML = '<div class="empty-state"><h3>Erro ao carregar tarefas</h3></div>';
+        }
+    }
+
+    function formatDateTime(dt) {
+        if (!dt) return '';
+        const d = new Date(dt);
+        return d.toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
+    }
+
+    async function deleteTask(id) {
+        if (!confirm('Tem certeza que deseja remover esta tarefa?')) return;
+        try {
+            const res = await fetch(`/api/tarefas/${id}`, { method: 'DELETE' });
+            const data = await res.json();
+            if (res.ok) {
+                showNotification(data.mensagem, 'success');
+                fetchTasks();
+            } else {
+                showNotification(data.erro || 'Erro ao remover tarefa', 'error');
+            }
+        } catch {
+            showNotification('Erro ao remover tarefa', 'error');
+        }
+    }
+
+    document.getElementById('taskForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const nome = document.getElementById('taskName').value.trim();
+        const descricao = document.getElementById('taskDescription').value.trim();
+        const horario = document.getElementById('taskTime').value;
+        if (!nome || !descricao || !horario) {
+            showNotification('Preencha todos os campos!', 'error');
+            return;
+        }
+        try {
+            const res = await fetch('/api/tarefas', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ nome, descricao, horario })
+            });
+            const data = await res.json();
+            if (res.ok) {
+                showNotification('Tarefa adicionada!', 'success');
+                this.reset();
+                fetchTasks();
+            } else {
+                showNotification(data.erro || 'Erro ao adicionar tarefa', 'error');
+            }
+        } catch {
+            showNotification('Erro ao adicionar tarefa', 'error');
+        }
+    });
+
+    function showNotification(msg, type) {
+        const notif = document.getElementById('notification');
+        notif.textContent = msg;
+        notif.className = `notification show ${type}`;
+        setTimeout(() => notif.className = 'notification', 3000);
+    }
+
+    function updateStats(tarefas) {
+        document.getElementById('totalTasks').textContent = tarefas.length;
+        const today = new Date().toISOString().slice(0, 10);
+        document.getElementById('todayTasks').textContent = tarefas.filter(t => t.horario && t.horario.slice(0,10) === today).length;
+        document.getElementById('upcomingTasks').textContent = tarefas.filter(t => t.horario && t.horario.slice(0,10) > today).length;
+    }
+
+    fetchTasks();
+    </script>
 </body>
 </html>
 
