@@ -1,0 +1,25 @@
+{
+  "tarefas": [
+    {
+      "id": 1,
+      "nome": "Reunião de equipe",
+      "descricao": "Discussão sobre o projeto Q4",
+      "horario": "2024-12-16T09:00",
+      "criadoEm": "2024-12-16T08:00:00.000Z"
+    },
+    {
+      "id": 2,
+      "nome": "Apresentação cliente",
+      "descricao": "Demonstração do protótipo final",
+      "horario": "2024-12-16T14:30",
+      "criadoEm": "2024-12-16T08:15:00.000Z"
+    },
+    {
+      "id": 3,
+      "nome": "Teste de funcionalidade",
+      "descricao": "Verificando se todas as funcionalidades estão funcionando corretamente no sistema de agenda colaborativa.",
+      "horario": "2025-09-17T03:35",
+      "criadoEm": "2025-09-17T03:35:48.376Z"
+    }
+  ]
+}
